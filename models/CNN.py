@@ -60,6 +60,7 @@ class SymmetricConv2d(nn.Module):
 class CNN(nn.Module):
     def __init__(self, symmetry=None):
         super().__init__()
+        self.symmetry = symmetry
         if symmetry is None:
             symmetry = ['vanilla'] * 4
         if isinstance(symmetry, str):

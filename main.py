@@ -8,9 +8,11 @@ import yaml
 from tqdm import tqdm
 import wandb
 #my imports
-from train_utils.eval import evaluate
-from train_utils.train import train_epoch
-from train_utils.utils import load_config, get_data_loaders, get_model, save_model_and_config
+from utils.eval import evaluate
+from utils.train import train_epoch
+from utils.utils import load_config, get_data_loaders, get_model, save_model_and_config
+
+from mmc_utils import LR_Scheduler
 
 import os
 
@@ -46,8 +48,11 @@ def main(config_path):
 
     #get train args
     epochs = train_config["epochs"]
-    lr = train_config["lr"]
     epochs = train_config["epochs"]
+    momentum = train_config["momentum"]
+    weight_decay = train_config["weight_decay"]
+    base_lr = train_config["base_lr"]
+    final_lr = train_config["final_lr"]
 
     #setup wandb
     wandb.init(project=wandb_name, name=run_id, config=config)
@@ -64,13 +69,16 @@ def main(config_path):
     model = model.to(device)
 
     #optimizer and loss
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=momentum, weight_decay=weight_decay)
     criterion = F.cross_entropy
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0.1)
+    #scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
 
     print("Start Training...")
     for epoch in tqdm(range(epochs), desc=f"Training for {epochs} epochs..."):
-        train_epoch(model, optimizer, criterion, train_loader, device, epoch)
+        train_epoch(model, optimizer, None, criterion, train_loader, device, epoch) #scheduler None because we have epoch-wise scheduler
         evaluate(model, test_loader, device, epoch)
+        scheduler.step()
     
     print("Finished Training!")
 
