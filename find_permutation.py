@@ -1,3 +1,11 @@
+'''
+This file was adapted from the original MMC github repository.
+Authors: Ekdeep Singh Lubana et al.
+Date: 09.04.2026
+GitHub: https://github.com/EkdeepSLubana/MMC
+Paper: https://arxiv.org/pdf/2211.08422
+Modifcation: None
+'''
 import torch
 import torch.nn.functional as F
 import torch.nn as nn

@@ -1,8 +1,11 @@
 '''
-File copied form the MMC github repo and slighlty modified to support symmetric kernels
-https://github.com/EkdeepSLubana/MMC
+This file was adapted from the original MMC github repository.
+Authors: Ekdeep Singh Lubana et al.
+Date: 09.04.2026
+GitHub: https://github.com/EkdeepSLubana/MMC
+Paper: https://arxiv.org/pdf/2211.08422
+Modifcation: Support Symmetric Kernels for ResNet18
 '''
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -55,23 +58,19 @@ class SymmetricConv2d(nn.Module):
         self.symmetry = SYMMETRY_CLASSES[symmetry]()
         
     def forward(self, x):
-        # Apply the symmetry operator to the convolution weight
         weight = self.symmetry(self.conv.weight)
         return F.conv2d(x, weight, self.conv.bias,
                         stride=self.conv.stride, padding=self.conv.padding,
                         dilation=self.conv.dilation, groups=self.conv.groups)
     
-### Conversion 
 def replace_sym_conv_with_normal(module):
     """
     Recursively replace all instances of SymmetricConv2d within the module
     with a regular nn.Conv2d whose weights are set to the effective symmetric weight.
     """
     for name, child in list(module._modules.items()):
-        # Check if this module is one of our symmetric convolutions.
         if isinstance(child, SymmetricConv2d):
-            conv_orig = child.conv  # The underlying convolution.
-            # Create a new standard convolution with identical parameters.
+            conv_orig = child.conv
             new_conv = nn.Conv2d(
                 conv_orig.in_channels,
                 conv_orig.out_channels,
@@ -82,16 +81,12 @@ def replace_sym_conv_with_normal(module):
                 groups=conv_orig.groups,
                 bias=(conv_orig.bias is not None)
             )
-            # The effective weight is what the forward pass uses:
-            # effective = symmetry(conv_orig.weight)
             effective_weight = child.symmetry(conv_orig.weight).detach().clone()
             new_conv.weight.data.copy_(effective_weight)
             if conv_orig.bias is not None:
                 new_conv.bias.data.copy_(conv_orig.bias.data)
-            # Replace the symmetric module in the parent's dict.
             module._modules[name] = new_conv
         else:
-            # Recurse into children.
             replace_sym_conv_with_normal(child)
 
 ##############################################
@@ -179,6 +174,7 @@ class ResNet(nn.Module):
         self.output_dim = 512 * block.expansion
         self.linear = nn.Linear(self.output_dim, num_classes)
 
+
     def _make_layer(self, block, planes, num_blocks, stride, symmetry):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
@@ -201,7 +197,8 @@ class ResNet(nn.Module):
     
     def to_normal(self):
         normal_model = copy.deepcopy(self)
-        return replace_sym_conv_with_normal(normal_model)
+        replace_sym_conv_with_normal(normal_model)
+        return normal_model
 
 class ResNet_basic(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, cfg=None, symmetry='vanilla'):
@@ -258,8 +255,8 @@ def ResNet56(num_classes=10, block="BasicBlock", symmetry='vanilla'):
 # Retrieval Function for Backbones
 ##############################################
 
-def create_model(name, num_classes=10, block='BasicBlock', symmetry='vanilla', normal_conv_layer=False):
-    if name == 'res18':
+def create_model(name, num_classes=10, block='BasicBlock', symmetry='vanilla', normal_conv_layer=True):
+    if name == 'ResNet18':
         net = ResNet18(num_classes=num_classes, block=block, symmetry=symmetry)
     if normal_conv_layer:
         #turn the symmetric into a standard layer

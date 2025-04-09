@@ -1,7 +1,16 @@
+'''
+This file was adapted from the original MMC github repository.
+Authors: Ekdeep Singh Lubana et al.
+Date: 09.04.2026
+GitHub: https://github.com/EkdeepSLubana/MMC
+Paper: https://arxiv.org/pdf/2211.08422
+Modifcation: Modified probe_connect to integrate in our codebase
+'''
 import torch
 import torch.optim as optim
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
+
 torch.manual_seed(int(0))
 cudnn.deterministic = True
 cudnn.benchmark = False
@@ -11,16 +20,17 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 from tqdm import tqdm
 import numpy as np
 from models.ResNet import create_model
-from GDL.mmc_utils import linear_eval
+from mmc_utils import linear_eval
+from utils.utils import get_data_loaders
 
 
 
 ### Linear path interpolation
-def lmc(alpha, net_1, net_2, model_class, num_classes):
+def lmc(alpha, model_1, model_2, model_class, num_classes):
     torch.cuda.empty_cache()
     net_interpolated = create_model(model_class, num_classes).to(device)
 
-    for module_1, module_2, module_interpolated in zip(net_1.modules(), net_2.modules(), net_interpolated.modules()):
+    for module_1, module_2, module_interpolated in zip(model_1.modules(), model_2.modules(), net_interpolated.modules()):
         if(isinstance(module_1, nn.Conv2d)):
             module_interpolated.weight.data = alpha * module_1.weight.data + (1-alpha) * module_2.weight.data
         elif(isinstance(module_1, nn.BatchNorm2d)):
@@ -38,11 +48,11 @@ def lmc(alpha, net_1, net_2, model_class, num_classes):
 
 
 ### Quadratic path interpolation
-def quadmc(alpha, net_1, net_2, net_midpoint, model_class, num_classes):
+def quadmc(alpha, model_1, model_2, net_midpoint, model_class, num_classes):
     torch.cuda.empty_cache()
     net_interpolated = create_model(model_class, num_classes).to(device)
 
-    for module_1, module_2, module_midpoint, module_interpolated in zip(net_1.modules(), net_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
+    for module_1, module_2, module_midpoint, module_interpolated in zip(model_1.modules(), model_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
         if(isinstance(module_1, nn.Conv2d)):
             module_interpolated.weight.data = (alpha**2) * module_1.weight.data + 2 * alpha * (1-alpha) * module_midpoint.weight.data + ((1-alpha)**2) * module_2.weight.data
         elif(isinstance(module_1, nn.BatchNorm2d)):
@@ -61,7 +71,7 @@ def quadmc(alpha, net_1, net_2, net_midpoint, model_class, num_classes):
 
 
 ### Training quadratic path's midpoint
-def train_quad_midpoint(net_1, net_2, train_setup):
+def train_quad_midpoint(model_1, model_2, train_setup):
 
     criterion = nn.CrossEntropyLoss()
 
@@ -76,9 +86,7 @@ def train_quad_midpoint(net_1, net_2, train_setup):
     optimizer = optim.SGD(net_midpoint.parameters(), lr=0.0, momentum=0.9, weight_decay=1e-4)
 
     # training 
-    dataloader = syndata.get_dataloader(load_type='train', base_dataset=train_setup['base_dataset'], 
-                                        cue_type=train_setup['cue_type'] if train_setup['id_data']!='nocue' else 'nocue')
-
+    dataloader, _ = get_data_loaders(train_setup["data_config"])
     accs_midpoint = []
     for epoch in range(train_setup['n_epochs']):
         torch.cuda.empty_cache()
@@ -101,7 +109,7 @@ def train_quad_midpoint(net_1, net_2, train_setup):
                     optimizer.param_groups[0]['lr'] = base_lr * (2 * alpha * (1-alpha))
 
                     # interpolate model params (has to be done explicitly because BN parameters will be overriden)
-                    for module_1, module_2, module_midpoint, module_interpolated in zip(net_1.modules(), net_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
+                    for module_1, module_2, module_midpoint, module_interpolated in zip(model_1.modules(), model_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
                         if(isinstance(module_1, nn.Conv2d)):
                             module_interpolated.weight.data = (alpha**2) * module_1.weight.data + 2 * alpha * (1-alpha) * module_midpoint.weight.data + ((1-alpha)**2) * module_2.weight.data
                         elif(isinstance(module_1, nn.BatchNorm2d)):
@@ -122,7 +130,7 @@ def train_quad_midpoint(net_1, net_2, train_setup):
 
                 # associate grads from interpolated model to intermediate model
                 with torch.no_grad():
-                    for module_1, module_2, module_midpoint, module_interpolated in zip(net_1.modules(), net_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
+                    for module_1, module_2, module_midpoint, module_interpolated in zip(model_1.modules(), model_2.modules(), net_midpoint.modules(), net_interpolated.modules()):
                         if(isinstance(module_1, nn.Conv2d)):
                             module_midpoint.weight.grad = module_interpolated.weight.grad.data
                         elif(isinstance(module_1, nn.BatchNorm2d)):
@@ -150,16 +158,12 @@ def train_quad_midpoint(net_1, net_2, train_setup):
 
 
 ### Probe connectivity
-def probe_connect(net_1, net_2, net_midpoint=None, setup=None, return_loss=False):
+def probe_connect(model_1, model_2, net_midpoint=None, setup=None, return_loss=False):
 
     np.random.seed(setup['seed_id'])
 
     # trainloader: used for resetting BN
-    trainloader = syndata.get_dataloader(load_type='train', base_dataset=setup['base_dataset'], cue_type='nocue')
-
-    # evalloader: depends on setup
-    evalloader = syndata.get_dataloader(load_type=setup['eval_data'], base_dataset=setup['base_dataset'], cue_type=setup['cue_type'], 
-                                        cue_proportion=1.0, randomize_cue=setup['randomize_cue'], randomize_img=setup['randomize_img'])
+    train_loader, test_loader = get_data_loaders(setup["data_config"])
 
     # eval accuracy
     accs_list, loss_list = [], []
@@ -169,9 +173,9 @@ def probe_connect(net_1, net_2, net_midpoint=None, setup=None, return_loss=False
 
         # interpolate model
         if(setup['connect_pattern']=='LMC' or setup['connect_pattern']=='LMCP'):
-            net_interpolated = lmc(alpha=alp, net_1=net_1, net_2=net_2, model_class=setup['model_class'], num_classes=setup['num_classes'])
+            net_interpolated = lmc(alpha=alp, model_1=model_1, model_2=model_2, model_class=setup['model_class'], num_classes=setup['num_classes'])
         elif(setup['connect_pattern']=='QMC'):
-            net_interpolated = quadmc(alpha=alp, net_1=net_1, net_2=net_2, net_midpoint=net_midpoint, model_class=setup['model_class'], num_classes=setup['num_classes'])
+            net_interpolated = quadmc(alpha=alp, model_1=model_1, model_2=model_2, net_midpoint=net_midpoint, model_class=setup['model_class'], num_classes=setup['num_classes'])
         else:
             raise Exception("MC not implemented")
         
@@ -180,16 +184,16 @@ def probe_connect(net_1, net_2, net_midpoint=None, setup=None, return_loss=False
         net_interpolated.train()
         with torch.no_grad():
             n_samples = 0
-            for x, _ in trainloader:
+            for x, _ in train_loader:
                 n_samples += x.shape[0]
                 net_interpolated(x.to(device))
 
         # eval
         if return_loss:
-            a, l = linear_eval(net_interpolated.eval(), dataloader=evalloader, suffix='for alpha: '+str(alp), return_loss=return_loss)
+            a, l = linear_eval(net_interpolated.eval(), dataloader=test_loader, suffix='for alpha: '+str(alp), return_loss=return_loss)
             loss_list += [l]
         else:
-            a = linear_eval(net_interpolated.eval(), dataloader=evalloader, suffix='for alpha: '+str(alp))
+            a = linear_eval(net_interpolated.eval(), dataloader=test_loader, suffix='for alpha: '+str(alp))
 
         accs_list += [a]
 

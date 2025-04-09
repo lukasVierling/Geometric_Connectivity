@@ -1,0 +1,20 @@
+models:
+  model_1: "./logs/vanilla/final_model.pt"
+  model_2: "./logs/vanilla/final_model.pt"
+  name: "ResNet18"
+
+interpolation:
+  method: "LMCP"
+  num_samples: 10
+  permutation_iter : 90
+
+data:
+  dataset: "CIFAR10"
+  data_root: "./data/"
+  batch_size: 256
+  data_augmentation: "vanilla"
+  augment_test: false
+
+run:
+  save_dir: "./logs/connectivity"
+  run_id: "run_1"

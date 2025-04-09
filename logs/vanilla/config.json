@@ -1,0 +1,1 @@
+{"model": {"symmetry": "vanilla"}, "train": {"epochs": 5, "momentum": 0.9, "weight_decay": 0.0001, "base_lr": 0.1, "final_lr": 0.001}, "data": {"dataset": "CIFAR10", "data_root": "./data/", "batch_size": 256, "data_augmentation": "vanilla", "augment_test": false}, "run": {"wandb_name": "ResNet_runs", "id": "vanilla", "save_path": "logs"}}
