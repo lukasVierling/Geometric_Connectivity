@@ -1,0 +1,428 @@
+[33mcommit f44ecd9ca8390ffeb1cd4b43ebbb4a3390371fb3[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: lukasVierling <vierling.lukas@gmail.com>
+Date:   Fri Apr 11 17:50:48 2025 +0100
+
+    exclude data from commit
+
+ .gitignore | 3 [32m++[m[31m-[m
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+[33mcommit ba32ada0868adaf0c7ad27f31a59e3d3e07ad46c[m
+Author: lukasVierling <vierling.lukas@gmail.com>
+Date:   Fri Apr 11 17:43:41 2025 +0100
+
+    lots of configs and jsons
+
+ .gitignore                |   5 [32m+[m
+ configs/config.yaml       |   4 [32m+[m[31m-[m
+ configs/connectivity.yaml |   6 [32m+[m[31m-[m
+ connectivity.ipynb        | 952 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m[31m-[m
+ connectivity.py           |  22 [32m+++[m[31m-[m
+ find_permutation.py       |   2 [32m+[m[31m-[m
+ generate_configs.py       |  71 [32m+++++++++++[m
+ main.py                   |  31 [32m++++[m[31m-[m
+ mmc_utils.py              |   2 [32m+[m[31m-[m
+ mode_connect.py           |  12 [32m+[m[31m-[m
+ run.sh                    |  27 [32m+++++[m
+ run_connectivity.sh       |   8 [32m++[m
+ 12 files changed, 1121 insertions(+), 21 deletions(-)
+
+[33mcommit 82e15fa35d9ff01e6561c0e773f30e44a218a19e[m
+Author: lukasVierling <vierling.lukas@gmail.com>
+Date:   Thu Apr 10 00:08:44 2025 +0100
+
+    added the linear connectivity update
+
+ configs/connectivity.yaml                                   |  20 [32m++++++++++++++++++++[m
+ connectivity.ipynb                                          |  44 [32m+++++++++++++++++++++++++++++++++++++++[m[31m-----[m
+ connectivity.py                                             | 107 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ find_permutation.py                                         |   8 [32m++++++++[m
+ logs/vanilla/config.json                                    |   1 [32m+[m
+ logs/vanilla/final_model.pt                                 | Bin [31m0[m -> [32m44776566[m bytes
+ mmc_utils.py                                                |   8 [32m++++++++[m
+ mode_connect.py                                             |  48 [32m++++++++++++++++++++++++++[m[31m----------------------[m
+ models/ResNet.py                                            |  27 [32m++++++++++++[m[31m---------------[m
+ wandb/run-20250409_193820-nuqcjoaz/files/config.yaml        |  48 [32m++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193820-nuqcjoaz/files/wandb-summary.json |   1 [32m+[m
+ wandb/run-20250409_193820-nuqcjoaz/run-nuqcjoaz.wandb       | Bin [31m262144[m -> [32m1553839[m bytes
+ wandb/run-20250409_193927-yxa84nqs/files/config.yaml        |  48 [32m++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193927-yxa84nqs/files/wandb-summary.json |   1 [32m+[m
+ wandb/run-20250409_193927-yxa84nqs/run-yxa84nqs.wandb       | Bin [31m0[m -> [32m1550502[m bytes
+ 15 files changed, 319 insertions(+), 42 deletions(-)
+
+[33mcommit 9d9f36883b06569119af8e861f7a9a5548c67851[m
+Author: lukasVierling <vierling.lukas@gmail.com>
+Date:   Wed Apr 9 19:39:44 2025 +0100
+
+    includes mmc
+
+ configs/config.yaml                                          |  17 [32m+++[m[31m---[m
+ connectivity.ipynb                                           | 273 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ find_permutation.py                                          | 317 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ logs/hflip_2/config.json                                     |   1 [32m+[m
+ logs/hflip_2/final_model.pt                                  | Bin [31m0[m -> [32m37425330[m bytes
+ logs/hvflip_2/config.json                                    |   1 [32m+[m
+ logs/hvflip_2/final_model.pt                                 | Bin [31m0[m -> [32m37425330[m bytes
+ logs/interpolation/exp_1                                     |  16 [32m++++++[m
+ logs/interpolation/exp_2                                     |  16 [32m++++++[m
+ logs/interpolation/exp_3                                     |  16 [32m++++++[m
+ logs/interpolation/exp_4                                     |  16 [32m++++++[m
+ logs/interpolation/exp_5                                     |  16 [32m++++++[m
+ logs/interpolation/exp_6                                     |  16 [32m++++++[m
+ logs/interpolation/exp_7                                     |  28 [32m++++++++++[m
+ logs/rot90_2/config.json                                     |   1 [32m+[m
+ logs/rot90_2/final_model.pt                                  | Bin [31m0[m -> [32m44776566[m bytes
+ logs/vanilla_2/config.json                                   |   1 [32m+[m
+ logs/vanilla_2/final_model.pt                                | Bin [31m0[m -> [32m37425330[m bytes
+ logs/vflip_2/config.json                                     |   1 [32m+[m
+ logs/vflip_2/final_model.pt                                  | Bin [31m0[m -> [32m37425330[m bytes
+ main.py                                                      |  20 [32m++++[m[31m---[m
+ mmc_utils.py                                                 |  66 [32m+++++++++++++++++++++++[m
+ mode_connect.py                                              | 199 [32m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ models/CNN.py                                                |   1 [32m+[m
+ models/ResNet.py                                             | 267 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ utils/connectivity.py                                        |  46 [32m++++++++++++++++[m
+ {train_utils => utils}/eval.py                               |   0
+ {train_utils => utils}/train.py                              |  12 [32m++++[m[31m-[m
+ {train_utils => utils}/utils.py                              |  21 [32m+++++++[m[31m-[m
+ wandb/latest-run                                             |   2 [32m+[m[31m-[m
+ wandb/run-20250409_141640-to5b4uys/files/config.yaml         |  43 [32m+++++++++++++++[m
+ wandb/run-20250409_141640-to5b4uys/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141640-to5b4uys/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141640-to5b4uys/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_141640-to5b4uys/run-to5b4uys.wandb        | Bin [31m0[m -> [32m10844276[m bytes
+ wandb/run-20250409_141700-jz0uywt5/files/config.yaml         |  43 [32m+++++++++++++++[m
+ wandb/run-20250409_141700-jz0uywt5/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141700-jz0uywt5/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141700-jz0uywt5/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_141700-jz0uywt5/run-jz0uywt5.wandb        | Bin [31m0[m -> [32m10945175[m bytes
+ wandb/run-20250409_141713-8h5669m6/files/config.yaml         |  43 [32m+++++++++++++++[m
+ wandb/run-20250409_141713-8h5669m6/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141713-8h5669m6/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141713-8h5669m6/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_141713-8h5669m6/run-8h5669m6.wandb        | Bin [31m0[m -> [32m10947810[m bytes
+ wandb/run-20250409_141735-4984o5zq/files/config.yaml         |  43 [32m+++++++++++++++[m
+ wandb/run-20250409_141735-4984o5zq/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141735-4984o5zq/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141735-4984o5zq/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_141735-4984o5zq/run-4984o5zq.wandb        | Bin [31m0[m -> [32m10915599[m bytes
+ wandb/run-20250409_141750-kuipoii8/files/config.yaml         |  43 [32m+++++++++++++++[m
+ wandb/run-20250409_141750-kuipoii8/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141750-kuipoii8/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_141750-kuipoii8/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_141750-kuipoii8/run-kuipoii8.wandb        | Bin [31m0[m -> [32m10896318[m bytes
+ wandb/run-20250409_165857-khwddg90/files/config.yaml         |  44 [32m++++++++++++++++[m
+ wandb/run-20250409_165857-khwddg90/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_165857-khwddg90/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_165857-khwddg90/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_165857-khwddg90/run-khwddg90.wandb        | Bin [31m0[m -> [32m2881[m bytes
+ wandb/run-20250409_165924-7inzddks/files/config.yaml         |  45 [32m++++++++++++++++[m
+ wandb/run-20250409_165924-7inzddks/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_165924-7inzddks/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_165924-7inzddks/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_165924-7inzddks/run-7inzddks.wandb        | Bin [31m0[m -> [32m3016[m bytes
+ wandb/run-20250409_170101-438rzzbc/run-438rzzbc.wandb        | Bin [31m0[m -> [32m750[m bytes
+ wandb/run-20250409_170113-zrk6vhl8/files/config.yaml         |  45 [32m++++++++++++++++[m
+ wandb/run-20250409_170113-zrk6vhl8/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_170113-zrk6vhl8/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_170113-zrk6vhl8/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_170113-zrk6vhl8/run-zrk6vhl8.wandb        | Bin [31m0[m -> [32m11586676[m bytes
+ wandb/run-20250409_174849-scddd9s2/files/config.yaml         |  49 [32m++++++++++++++++++[m
+ wandb/run-20250409_174849-scddd9s2/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_174849-scddd9s2/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_174849-scddd9s2/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_174849-scddd9s2/run-scddd9s2.wandb        | Bin [31m0[m -> [32m2189830[m bytes
+ wandb/run-20250409_175758-c0b3y59e/files/config.yaml         |  48 [32m+++++++++++++++++[m
+ wandb/run-20250409_175758-c0b3y59e/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_175758-c0b3y59e/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_175758-c0b3y59e/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_175758-c0b3y59e/run-c0b3y59e.wandb        | Bin [31m0[m -> [32m1900544[m bytes
+ wandb/run-20250409_180406-eeekk6p5/files/config.yaml         |  48 [32m+++++++++++++++++[m
+ wandb/run-20250409_180406-eeekk6p5/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_180406-eeekk6p5/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_180406-eeekk6p5/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_180406-eeekk6p5/run-eeekk6p5.wandb        | Bin [31m0[m -> [32m1253432[m bytes
+ wandb/run-20250409_193820-nuqcjoaz/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193820-nuqcjoaz/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193820-nuqcjoaz/run-nuqcjoaz.wandb        | Bin [31m0[m -> [32m262144[m bytes
+ wandb/run-20250409_193851-ic9q8qzj/files/config.yaml         |  48 [32m+++++++++++++++++[m
+ wandb/run-20250409_193851-ic9q8qzj/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193851-ic9q8qzj/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193851-ic9q8qzj/files/wandb-summary.json  |   1 [32m+[m
+ wandb/run-20250409_193851-ic9q8qzj/run-ic9q8qzj.wandb        |   0
+ wandb/run-20250409_193927-yxa84nqs/files/requirements.txt    | 227 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193927-yxa84nqs/files/wandb-metadata.json |  88 [32m+++++++++++++++++++++++++++++++[m
+ wandb/run-20250409_193927-yxa84nqs/run-yxa84nqs.wandb        |   0
+ 97 files changed, 6318 insertions(+), 16 deletions(-)
+
+[33mcommit b1ff9e51869c0615374a665697bf36291c4d1cda[m
+Author: lukasVierling <vierling.lukas@gmail.com>
+Date:   Tue Apr 8 20:18:56 2025 +0100
+
+    first push
+
+ configs/config.yaml                                               |     17 [32m+[m
+ data/Cora/Cora/processed/data.pt                                  |    Bin [31m0[m -> [32m15723336[m bytes
+ data/Cora/Cora/processed/pre_filter.pt                            |    Bin [31m0[m -> [32m864[m bytes
+ data/Cora/Cora/processed/pre_transform.pt                         |    Bin [31m0[m -> [32m864[m bytes
+ data/Cora/Cora/raw/cora.content                                   |      0
+ data/Cora/Cora/raw/ind.cora.allx                                  |    Bin [31m0[m -> [32m257305[m bytes
+ data/Cora/Cora/raw/ind.cora.ally                                  |    Bin [31m0[m -> [32m47959[m bytes
+ data/Cora/Cora/raw/ind.cora.graph                                 |    Bin [31m0[m -> [32m59847[m bytes
+ data/Cora/Cora/raw/ind.cora.test.index                            |   1000 [32m+[m
+ data/Cora/Cora/raw/ind.cora.tx                                    |    Bin [31m0[m -> [32m148025[m bytes
+ data/Cora/Cora/raw/ind.cora.ty                                    |    Bin [31m0[m -> [32m28135[m bytes
+ data/Cora/Cora/raw/ind.cora.x                                     |    Bin [31m0[m -> [32m22119[m bytes
+ data/Cora/Cora/raw/ind.cora.y                                     |    Bin [31m0[m -> [32m4054[m bytes
+ data/MNIST/raw/t10k-images-idx3-ubyte                             |    Bin [31m0[m -> [32m7840016[m bytes
+ data/MNIST/raw/t10k-images-idx3-ubyte.gz                          |    Bin [31m0[m -> [32m1648877[m bytes
+ data/MNIST/raw/t10k-labels-idx1-ubyte                             |    Bin [31m0[m -> [32m10008[m bytes
+ data/MNIST/raw/t10k-labels-idx1-ubyte.gz                          |    Bin [31m0[m -> [32m4542[m bytes
+ data/MNIST/raw/train-images-idx3-ubyte                            |    Bin [31m0[m -> [32m47040016[m bytes
+ data/MNIST/raw/train-images-idx3-ubyte.gz                         |    Bin [31m0[m -> [32m9912422[m bytes
+ data/MNIST/raw/train-labels-idx1-ubyte                            |    Bin [31m0[m -> [32m60008[m bytes
+ data/MNIST/raw/train-labels-idx1-ubyte.gz                         |    Bin [31m0[m -> [32m28881[m bytes
+ data/Wikipedia/squirrel/geom_gcn/processed/data.pt                |    Bin [31m0[m -> [32m47132744[m bytes
+ data/Wikipedia/squirrel/geom_gcn/processed/pre_filter.pt          |    Bin [31m0[m -> [32m864[m bytes
+ data/Wikipedia/squirrel/geom_gcn/processed/pre_transform.pt       |    Bin [31m0[m -> [32m864[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/out1_graph_edges.txt         | 217074 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ data/Wikipedia/squirrel/geom_gcn/raw/out1_node_feature_label.txt  |   5202 [32m+++[m
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_0.npz |    Bin [31m0[m -> [32m3134[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_1.npz |    Bin [31m0[m -> [32m3130[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_2.npz |    Bin [31m0[m -> [32m3121[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_3.npz |    Bin [31m0[m -> [32m3126[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_4.npz |    Bin [31m0[m -> [32m3124[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_5.npz |    Bin [31m0[m -> [32m3111[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_6.npz |    Bin [31m0[m -> [32m3118[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_7.npz |    Bin [31m0[m -> [32m3138[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_8.npz |    Bin [31m0[m -> [32m3132[m bytes
+ data/Wikipedia/squirrel/geom_gcn/raw/squirrel_split_0.6_0.2_9.npz |    Bin [31m0[m -> [32m3146[m bytes
+ data/cifar-10-batches-py/batches.meta                             |    Bin [31m0[m -> [32m158[m bytes
+ data/cifar-10-batches-py/data_batch_1                             |    Bin [31m0[m -> [32m31035704[m bytes
+ data/cifar-10-batches-py/data_batch_2                             |    Bin [31m0[m -> [32m31035320[m bytes
+ data/cifar-10-batches-py/data_batch_3                             |    Bin [31m0[m -> [32m31035999[m bytes
+ data/cifar-10-batches-py/data_batch_4                             |    Bin [31m0[m -> [32m31035696[m bytes
+ data/cifar-10-batches-py/data_batch_5                             |    Bin [31m0[m -> [32m31035623[m bytes
+ data/cifar-10-batches-py/readme.html                              |      1 [32m+[m
+ data/cifar-10-batches-py/test_batch                               |    Bin [31m0[m -> [32m31035526[m bytes
+ data/cifar-10-python.tar.gz                                       |    Bin [31m0[m -> [32m170498071[m bytes
+ logs/hflip_1/config.json                                          |      1 [32m+[m
+ logs/hflip_1/final_model.pt                                       |    Bin [31m0[m -> [32m37425330[m bytes
+ logs/hvflip_1/config.json                                         |      1 [32m+[m
+ logs/hvflip_1/final_model.pt                                      |    Bin [31m0[m -> [32m37425330[m bytes
+ logs/rot90_1/config.json                                          |      1 [32m+[m
+ logs/rot90_1/final_model.pt                                       |    Bin [31m0[m -> [32m37425330[m bytes
+ logs/vanilla_1/config.json                                        |      1 [32m+[m
+ logs/vanilla_1/final_model.pt                                     |    Bin [31m0[m -> [32m37425330[m bytes
+ logs/vflip_1/config.json                                          |      1 [32m+[m
+ logs/vflip_1/final_model.pt                                       |    Bin [31m0[m -> [32m37425330[m bytes
+ main.py                                                           |     87 [32m+[m
+ models/CNN.py                                                     |     85 [32m+[m
+ test.ipynb                                                        |    557 [32m+[m
+ test_gcn.ipynb                                                    |    539 [32m+[m
+ test_symmetric_loss.ipynb                                         |    675 [32m+[m
+ train_utils/eval.py                                               |     33 [32m+[m
+ train_utils/train.py                                              |     50 [32m+[m
+ train_utils/utils.py                                              |     74 [32m+[m
+ wandb/latest-run                                                  |      1 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/files/conda-environment.yaml   |    376 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/files/config.yaml              |     28 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/files/requirements.txt         |    240 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/files/wandb-metadata.json      |    319 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_145226-2v9be3cy/run-2v9be3cy.wandb             |    Bin [31m0[m -> [32m4432[m bytes
+ wandb/run-20250408_145305-13jz8b63/files/conda-environment.yaml   |    376 [32m+[m
+ wandb/run-20250408_145305-13jz8b63/files/config.yaml              |     28 [32m+[m
+ wandb/run-20250408_145305-13jz8b63/files/requirements.txt         |    240 [32m+[m
+ wandb/run-20250408_145305-13jz8b63/files/wandb-metadata.json      |    319 [32m+[m
+ wandb/run-20250408_145305-13jz8b63/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_145305-13jz8b63/run-13jz8b63.wandb             |    Bin [31m0[m -> [32m7649[m bytes
+ wandb/run-20250408_145734-73wxbj2t/files/conda-environment.yaml   |    376 [32m+[m
+ wandb/run-20250408_145734-73wxbj2t/files/config.yaml              |     28 [32m+[m
+ wandb/run-20250408_145734-73wxbj2t/files/requirements.txt         |    240 [32m+[m
+ wandb/run-20250408_145734-73wxbj2t/files/wandb-metadata.json      |    319 [32m+[m
+ wandb/run-20250408_145734-73wxbj2t/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_145734-73wxbj2t/run-73wxbj2t.wandb             |    Bin [31m0[m -> [32m7679[m bytes
+ wandb/run-20250408_145843-7f3gv61d/files/conda-environment.yaml   |    376 [32m+[m
+ wandb/run-20250408_145843-7f3gv61d/files/config.yaml              |     28 [32m+[m
+ wandb/run-20250408_145843-7f3gv61d/files/requirements.txt         |    240 [32m+[m
+ wandb/run-20250408_145843-7f3gv61d/files/wandb-metadata.json      |    319 [32m+[m
+ wandb/run-20250408_145843-7f3gv61d/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_145843-7f3gv61d/run-7f3gv61d.wandb             |    Bin [31m0[m -> [32m19293[m bytes
+ wandb/run-20250408_150103-id90lsl5/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150103-id90lsl5/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150103-id90lsl5/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150103-id90lsl5/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150103-id90lsl5/run-id90lsl5.wandb             |    Bin [31m0[m -> [32m31979[m bytes
+ wandb/run-20250408_150215-870k51ai/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150215-870k51ai/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150215-870k51ai/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150215-870k51ai/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150215-870k51ai/run-870k51ai.wandb             |    Bin [31m0[m -> [32m5270[m bytes
+ wandb/run-20250408_150257-69wtjooy/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150257-69wtjooy/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150257-69wtjooy/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150257-69wtjooy/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150257-69wtjooy/run-69wtjooy.wandb             |    Bin [31m0[m -> [32m5270[m bytes
+ wandb/run-20250408_150336-fzxusshh/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150336-fzxusshh/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150336-fzxusshh/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150336-fzxusshh/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150336-fzxusshh/run-fzxusshh.wandb             |    Bin [31m0[m -> [32m5265[m bytes
+ wandb/run-20250408_150455-lp50sm0x/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150455-lp50sm0x/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150455-lp50sm0x/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150455-lp50sm0x/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150455-lp50sm0x/run-lp50sm0x.wandb             |    Bin [31m0[m -> [32m6011[m bytes
+ wandb/run-20250408_150538-8ygqgm5v/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150538-8ygqgm5v/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150538-8ygqgm5v/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150538-8ygqgm5v/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150538-8ygqgm5v/run-8ygqgm5v.wandb             |    Bin [31m0[m -> [32m6011[m bytes
+ wandb/run-20250408_150822-8baq3pow/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150822-8baq3pow/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150822-8baq3pow/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150822-8baq3pow/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150822-8baq3pow/run-8baq3pow.wandb             |    Bin [31m0[m -> [32m6022[m bytes
+ wandb/run-20250408_150850-0baq146u/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_150850-0baq146u/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_150850-0baq146u/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_150850-0baq146u/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_150850-0baq146u/run-0baq146u.wandb             |    Bin [31m0[m -> [32m5254[m bytes
+ wandb/run-20250408_151003-wkw7ns4m/run-wkw7ns4m.wandb             |      0
+ wandb/run-20250408_151015-98vht3mh/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_151015-98vht3mh/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_151015-98vht3mh/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_151015-98vht3mh/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_151015-98vht3mh/run-98vht3mh.wandb             |    Bin [31m0[m -> [32m4949[m bytes
+ wandb/run-20250408_151054-hzeu1i7n/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_151054-hzeu1i7n/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_151054-hzeu1i7n/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_151054-hzeu1i7n/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_151054-hzeu1i7n/run-hzeu1i7n.wandb             |    Bin [31m0[m -> [32m8613664[m bytes
+ wandb/run-20250408_153224-hlhdz50n/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_153224-hlhdz50n/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_153224-hlhdz50n/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_153224-hlhdz50n/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_153224-hlhdz50n/run-hlhdz50n.wandb             |    Bin [31m0[m -> [32m2228224[m bytes
+ wandb/run-20250408_153427-jyoso5cf/files/config.yaml              |     24 [32m+[m
+ wandb/run-20250408_153427-jyoso5cf/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_153427-jyoso5cf/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_153427-jyoso5cf/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_153427-jyoso5cf/run-jyoso5cf.wandb             |    Bin [31m0[m -> [32m8577882[m bytes
+ wandb/run-20250408_154359-5u6wi0px/files/config.yaml              |     23 [32m+[m
+ wandb/run-20250408_154359-5u6wi0px/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_154359-5u6wi0px/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_154359-5u6wi0px/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_154359-5u6wi0px/run-5u6wi0px.wandb             |    Bin [31m0[m -> [32m6638[m bytes
+ wandb/run-20250408_154426-mfbim74u/files/config.yaml              |     23 [32m+[m
+ wandb/run-20250408_154426-mfbim74u/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_154426-mfbim74u/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_154426-mfbim74u/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_154426-mfbim74u/run-mfbim74u.wandb             |    Bin [31m0[m -> [32m8592264[m bytes
+ wandb/run-20250408_155840-9iw3rdzx/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_155840-9iw3rdzx/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_155840-9iw3rdzx/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_155840-9iw3rdzx/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_155840-9iw3rdzx/run-9iw3rdzx.wandb             |    Bin [31m0[m -> [32m8610322[m bytes
+ wandb/run-20250408_160636-3x3urii4/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_160636-3x3urii4/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_160636-3x3urii4/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_160636-3x3urii4/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_160636-3x3urii4/run-3x3urii4.wandb             |    Bin [31m0[m -> [32m8675216[m bytes
+ wandb/run-20250408_161845-3o4h908n/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_161845-3o4h908n/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_161845-3o4h908n/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_161845-3o4h908n/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_161845-3o4h908n/run-3o4h908n.wandb             |    Bin [31m0[m -> [32m8580352[m bytes
+ wandb/run-20250408_181412-lfw7geik/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_181412-lfw7geik/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_181412-lfw7geik/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_181412-lfw7geik/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_181412-lfw7geik/run-lfw7geik.wandb             |    Bin [31m0[m -> [32m9126907[m bytes
+ wandb/run-20250408_194419-yz6gijg9/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_194419-yz6gijg9/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_194419-yz6gijg9/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_194419-yz6gijg9/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_194419-yz6gijg9/run-yz6gijg9.wandb             |    Bin [31m0[m -> [32m2635324[m bytes
+ wandb/run-20250408_194656-7eclef10/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_194656-7eclef10/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_194656-7eclef10/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_194656-7eclef10/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_194656-7eclef10/run-7eclef10.wandb             |    Bin [31m0[m -> [32m2568[m bytes
+ wandb/run-20250408_194728-81putbq7/files/config.yaml              |     42 [32m+[m
+ wandb/run-20250408_194728-81putbq7/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_194728-81putbq7/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_194728-81putbq7/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_194728-81putbq7/run-81putbq7.wandb             |    Bin [31m0[m -> [32m6356992[m bytes
+ wandb/run-20250408_195348-m8v7lrp9/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195348-m8v7lrp9/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195348-m8v7lrp9/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195348-m8v7lrp9/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195348-m8v7lrp9/run-m8v7lrp9.wandb             |    Bin [31m0[m -> [32m851836[m bytes
+ wandb/run-20250408_195552-w2u2zls0/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195552-w2u2zls0/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195552-w2u2zls0/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195552-w2u2zls0/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195552-w2u2zls0/run-w2u2zls0.wandb             |    Bin [31m0[m -> [32m852298[m bytes
+ wandb/run-20250408_195713-tya6f91p/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195713-tya6f91p/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195713-tya6f91p/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195713-tya6f91p/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195713-tya6f91p/run-tya6f91p.wandb             |    Bin [31m0[m -> [32m856680[m bytes
+ wandb/run-20250408_195741-kansulfp/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195741-kansulfp/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195741-kansulfp/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195741-kansulfp/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195741-kansulfp/run-kansulfp.wandb             |    Bin [31m0[m -> [32m877567[m bytes
+ wandb/run-20250408_195801-jijgqb04/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195801-jijgqb04/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195801-jijgqb04/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195801-jijgqb04/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195801-jijgqb04/run-jijgqb04.wandb             |    Bin [31m0[m -> [32m887785[m bytes
+ wandb/run-20250408_195829-wbgpfi9q/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195829-wbgpfi9q/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195829-wbgpfi9q/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195829-wbgpfi9q/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195829-wbgpfi9q/run-wbgpfi9q.wandb             |    Bin [31m0[m -> [32m876260[m bytes
+ wandb/run-20250408_195907-xn13lamh/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195907-xn13lamh/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195907-xn13lamh/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195907-xn13lamh/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195907-xn13lamh/run-xn13lamh.wandb             |    Bin [31m0[m -> [32m863463[m bytes
+ wandb/run-20250408_195952-m7i8a9rd/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_195952-m7i8a9rd/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_195952-m7i8a9rd/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_195952-m7i8a9rd/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_195952-m7i8a9rd/run-m7i8a9rd.wandb             |    Bin [31m0[m -> [32m10893307[m bytes
+ wandb/run-20250408_200001-n2zzzoqb/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_200001-n2zzzoqb/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_200001-n2zzzoqb/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_200001-n2zzzoqb/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_200001-n2zzzoqb/run-n2zzzoqb.wandb             |    Bin [31m0[m -> [32m10952146[m bytes
+ wandb/run-20250408_200013-0c22dtyl/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_200013-0c22dtyl/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_200013-0c22dtyl/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_200013-0c22dtyl/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_200013-0c22dtyl/run-0c22dtyl.wandb             |    Bin [31m0[m -> [32m10960515[m bytes
+ wandb/run-20250408_200021-ln1fl3v1/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_200021-ln1fl3v1/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_200021-ln1fl3v1/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_200021-ln1fl3v1/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_200021-ln1fl3v1/run-ln1fl3v1.wandb             |    Bin [31m0[m -> [32m10957410[m bytes
+ wandb/run-20250408_200033-npk2ipkw/files/config.yaml              |     43 [32m+[m
+ wandb/run-20250408_200033-npk2ipkw/files/requirements.txt         |    227 [32m+[m
+ wandb/run-20250408_200033-npk2ipkw/files/wandb-metadata.json      |     88 [32m+[m
+ wandb/run-20250408_200033-npk2ipkw/files/wandb-summary.json       |      1 [32m+[m
+ wandb/run-20250408_200033-npk2ipkw/run-npk2ipkw.wandb             |    Bin [31m0[m -> [32m10925637[m bytes
+ 254 files changed, 240828 insertions(+)
+
+[33mcommit 1c0994162f5e28d5193f377b1fb82d6a061b1d78[m
+Author: Lukas Vierling <90094980+lukasVierling@users.noreply.github.com>
+Date:   Sat Apr 5 17:36:50 2025 +0100
+
+    Initial commit
+
+ .gitignore | 174 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ README.md  |   2 [32m++[m
+ 2 files changed, 176 insertions(+)

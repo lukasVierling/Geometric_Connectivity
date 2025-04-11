@@ -64,10 +64,6 @@ class SymmetricConv2d(nn.Module):
                         dilation=self.conv.dilation, groups=self.conv.groups)
     
 def replace_sym_conv_with_normal(module):
-    """
-    Recursively replace all instances of SymmetricConv2d within the module
-    with a regular nn.Conv2d whose weights are set to the effective symmetric weight.
-    """
     for name, child in list(module._modules.items()):
         if isinstance(child, SymmetricConv2d):
             conv_orig = child.conv
@@ -88,6 +84,68 @@ def replace_sym_conv_with_normal(module):
             module._modules[name] = new_conv
         else:
             replace_sym_conv_with_normal(child)
+
+def eval_symmetry(weight, symmetry):
+
+    weight_normalized = weight / torch.norm(weight, p="fro")
+
+    if symmetry == "h":
+        transforms = [lambda x: torch.flip(x, [-1])]
+    elif symmetry == "v":
+        transforms = [lambda x: torch.flip(x, [-2])]
+    elif symmetry == "hv":
+        transforms = [lambda x: torch.flip(x, [-1]),
+               lambda x: torch.flip(x, [-2])]
+    elif symmetry == "rot90":
+        transforms= [lambda x: torch.rot90(x, k=1, dims=(-2,-1)),
+                     lambda x: torch.rot90(x, k=2,dims=(-2,-1)),
+                     lambda x: torch.rot90(x, k=3,dims=(-2,-1))]
+    elif symmetry == "total":
+        transforms = [
+            lambda x: torch.rot90(x, k=1, dims=[2, 3]),
+            lambda x: torch.rot90(x, k=2, dims=[2, 3]),
+            lambda x: torch.rot90(x, k=3, dims=[2, 3]),
+            lambda x: torch.flip(x, [2]),
+            lambda x: torch.flip(x, [3]),
+            lambda x: torch.flip(torch.rot90(x, k=1, dims=[2, 3]), [2]),
+            lambda x: torch.flip(torch.rot90(x, k=1, dims=[2, 3]), [3])
+        ]
+    delta = 0
+    for transform in transforms:
+        weight_transformed = transform(weight_normalized)
+        diff = weight_transformed - weight_normalized
+        delta += torch.norm(diff, p="fro")
+
+    avg_delta = delta/(2*len(transforms))
+    S_K = 1-avg_delta
+    return S_K.item()
+
+
+def evaluate_symmetry(module):
+    horizontal_symmetry = 0
+    vertical_symmetry = 0
+    hv_symmetry = 0
+    rot90_symmetry = 0
+    total_symmetry = 0
+    counter = 0
+    for name, child in list(module._modules.items()):
+        if isinstance(child, SymmetricConv2d):
+            conv_orig = child.conv
+            weight = child.symmetry(conv_orig.weight).detach().clone()
+            horizontal_symmetry += eval_symmetry(weight, "h")
+            vertical_symmetry += eval_symmetry(weight, "v")
+            hv_symmetry += eval_symmetry(weight, "hv")
+            rot90_symmetry += eval_symmetry(weight, "rot90")
+            total_symmetry += eval_symmetry(weight, "total")
+            counter += 1
+    horizontal_symmetry = horizontal_symmetry / counter
+    vertical_symmetry = vertical_symmetry / counter
+    hv_symmetry = hv_symmetry / counter
+    rot90_symmetry = rot90_symmetry / counter
+    total_symmetry = total_symmetry / counter
+
+    return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry
+
 
 ##############################################
 # Modified ResNet Blocks with Symmetric Kernels
@@ -199,6 +257,12 @@ class ResNet(nn.Module):
         normal_model = copy.deepcopy(self)
         replace_sym_conv_with_normal(normal_model)
         return normal_model
+
+    def evaluate_symmetry(self):
+        with torch.no_grad():
+            symmetries = evaluate_symmetry(self)
+        return symmetries
+    
 
 class ResNet_basic(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, cfg=None, symmetry='vanilla'):

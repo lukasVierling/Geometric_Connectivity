@@ -1,1 +1,0 @@
-{"model": {"symmetry": "hvflip"}, "train": {"epochs": 10, "lr": 0.001}, "data": {"dataset": "CIFAR10", "data_root": "./data/", "batch_size": 64, "data_augmentation": "vanilla"}, "run": {"wandb_name": "example_run", "id": "hvflip_2", "save_path": "logs"}}
