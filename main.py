@@ -10,7 +10,7 @@ import wandb
 #my imports
 from utils.eval import evaluate
 from utils.train import train_epoch
-from utils.utils import load_config, get_data_loaders, get_model, save_model_and_config
+from utils.utils import load_config, get_data_loaders, get_model, save_model_and_config, set_seed
 
 from mmc_utils import LR_Scheduler
 
@@ -44,6 +44,14 @@ def main(config_path):
     wandb_name = run_config["wandb_name"]
     run_id = run_config["id"]
     save_path = run_config["save_path"]
+    seed = run_config.get("seed", 0)
+    save_init = run_config.get("save_init", False)
+    track_symmetry = run_config.get("track_symmetry", False)
+
+    #setting seed
+    set_seed(seed)
+    print(f"Set seed for the run: {seed}.")
+
     print(f"Initialize Weights and Biases with name: {wandb_name}")
 
     #get train args
@@ -57,6 +65,9 @@ def main(config_path):
     #setup wandb
     wandb.init(project=wandb_name, name=run_id, config=config)
 
+    #create save dir
+    save_dir = os.path.join(save_path, run_id)
+
     #dataset
     train_loader ,test_loader = get_data_loaders(data_config)
 
@@ -68,21 +79,35 @@ def main(config_path):
     model = get_model(model_config)
     model = model.to(device)
 
+    #save model if set
+    if save_init:
+        save_model_and_config(model, config, save_dir, name="init")
+
     #optimizer and loss
     optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=momentum, weight_decay=weight_decay)
     criterion = F.cross_entropy
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0.1)
     #scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
-
+    all_symmetries = []
     print("Start Training...")
     for epoch in tqdm(range(epochs), desc=f"Training for {epochs} epochs..."):
         train_epoch(model, optimizer, None, criterion, train_loader, device, epoch) #scheduler None because we have epoch-wise scheduler
         evaluate(model, test_loader, device, epoch)
         scheduler.step()
+        if epoch % 1 == 0 and track_symmetry: #1 can be adjusted to track symmetry less often
+            symmetries = model.evaluate_symmetry()
+            wandb.log({ "horizontal": symmetries[0],
+                    "vertical":symmetries[1],
+                    "horizontal-vertical": symmetries[2],
+                    "rot90": symmetries[3],
+                    "total_symmetry": symmetries[4]
+            })
+            all_symmetries.append(symmetries)
     
     print("Finished Training!")
 
-    save_dir = os.path.join(save_path, run_id)
+    if track_symmetry:
+        config["symmetries"] = all_symmetries
 
     save_model_and_config(model, config, save_dir)
     

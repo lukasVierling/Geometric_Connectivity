@@ -1,6 +1,6 @@
 models:
-  model_1: "./logs/vanilla/final_model.pt"
-  model_2: "./logs/vanilla/final_model.pt"
+  model_1: "./logs/vanilla_5/final_model.pt"
+  model_2: "./logs/vflip_5/final_model.pt"
   name: "ResNet18"
 
 interpolation:
@@ -17,4 +17,4 @@ data:
 
 run:
   save_dir: "./logs/connectivity"
-  run_id: "run_1"
+  run_id: "vanilla_5_to_vflip_5_lmcp"

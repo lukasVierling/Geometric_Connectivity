@@ -3,7 +3,7 @@ model:
   name: "ResNet18"
 
 train:
-  epochs: 5
+  epochs: 100
   momentum: 0.9
   weight_decay: 0.0001
   base_lr : 0.1
@@ -18,5 +18,5 @@ data:
 
 run:
   wandb_name: "ResNet_runs"
-  id: "vanilla"
+  id: "vanilla_1"
   save_path: "logs"

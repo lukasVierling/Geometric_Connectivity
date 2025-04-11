@@ -19,6 +19,21 @@ def test_connectivity(config_path):
     interpolation_config = config["interpolation"]
     data_config = config["data"]
     run_config = config["run"]
+    print("Start Connectivity Testing with the following Settings:")
+    print("----------------------------------------")
+    print("Model Config: \n")
+    print(model_config)
+    print("----------------------------------------")
+    print("Interpolation Config: \n")
+    print(interpolation_config)
+    print("----------------------------------------")
+    print("Data Config: \n")
+    print(data_config)
+    print("----------------------------------------")
+    print("Run Config: \n")
+    print(run_config)
+    print("----------------------------------------")
+
     
     #get the run args
     save_dir = run_config["save_dir"]
@@ -58,8 +73,8 @@ def test_connectivity(config_path):
         train_setup = {
             "model": "ResNet18",
             "num_classes": 10,
-            "n_epochs": 100,
-            "start_lr": 0.1,
+            "n_epochs": 10,
+            "start_lr": 0.001,
             "lr_decay": 0.1,
             "decay_epochs": 40,
             "data_config": data_config
@@ -91,8 +106,11 @@ def test_connectivity(config_path):
                                                     setup=setup, return_loss=True)
     
     results = {"accs": accs, "losses": losses}
+    
+    os.makedirs(save_dir, exist_ok=True)
 
     save_path = os.path.join(save_dir, run_id)
+
 
     with open(save_path, "w") as f:
         json.dump(results, f, indent=4)

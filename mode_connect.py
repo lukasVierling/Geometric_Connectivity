@@ -1,7 +1,7 @@
 '''
 This file was adapted from the original MMC github repository.
 Authors: Ekdeep Singh Lubana et al.
-Date: 09.04.2026
+Date: 09.04.2025
 GitHub: https://github.com/EkdeepSLubana/MMC
 Paper: https://arxiv.org/pdf/2211.08422
 Modifcation: Modified probe_connect to integrate in our codebase
@@ -10,6 +10,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
+from torch.utils.data import DataLoader, Subset
 
 torch.manual_seed(int(0))
 cudnn.deterministic = True
@@ -76,10 +77,10 @@ def train_quad_midpoint(model_1, model_2, train_setup):
     criterion = nn.CrossEntropyLoss()
 
     # midpoint model
-    net_midpoint = create_model(train_setup['model'], num_classes=train_setup['num_classes']).to(device)
+    net_midpoint = create_model(train_setup['model'], num_classes=train_setup['num_classes'], normal_conv_layer=True).to(device)
 
     # interpolated model used for training
-    net_interpolated = create_model(train_setup['model'], num_classes=train_setup['num_classes']).to(device)
+    net_interpolated = create_model(train_setup['model'], num_classes=train_setup['num_classes'], normal_conv_layer=True).to(device)
     net_interpolated.train()
 
     # optimizer
@@ -165,6 +166,10 @@ def probe_connect(model_1, model_2, net_midpoint=None, setup=None, return_loss=F
     # trainloader: used for resetting BN
     train_loader, test_loader = get_data_loaders(setup["data_config"])
 
+    #get subset of train set for loss landscape eval
+    idx = torch.randperm(len(train_loader.dataset))[:5000]
+    test_loader = DataLoader(Subset(train_loader.dataset, idx), batch_size=setup["data_config"]["batch_size"])   
+
     # eval accuracy
     accs_list, loss_list = [], []
     print("Interpolation strengths:", np.arange(0, 1 + 1 / setup['n_interpolations'], 1 / setup['n_interpolations']))
@@ -190,6 +195,7 @@ def probe_connect(model_1, model_2, net_midpoint=None, setup=None, return_loss=F
 
         # eval
         if return_loss:
+            #a, l = linear_eval(net_interpolated.eval(), dataloader=train_loader, suffix='for alpha: '+str(alp), return_loss=return_loss)
             a, l = linear_eval(net_interpolated.eval(), dataloader=test_loader, suffix='for alpha: '+str(alp), return_loss=return_loss)
             loss_list += [l]
         else:
