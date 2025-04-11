@@ -178,3 +178,4 @@ cython_debug/
 *.json
 *.wandb
 data/*
+data/
