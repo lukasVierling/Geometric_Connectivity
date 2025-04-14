@@ -127,11 +127,15 @@ def evaluate_symmetry(module):
     hv_symmetry = 0
     rot90_symmetry = 0
     total_symmetry = 0
+    mean_weight_total_symmetry = 0
     counter = 0
     for name, child in list(module._modules.items()):
         if isinstance(child, SymmetricConv2d):
             conv_orig = child.conv
             weight = child.symmetry(conv_orig.weight).detach().clone()
+            #get the mean kernel
+            mean_weight = weight.mean(dim=(0,1), keepdim=True)
+            mean_weight_total_symmetry = eval_symmetry(mean_weight, "total")
             horizontal_symmetry += eval_symmetry(weight, "h")
             vertical_symmetry += eval_symmetry(weight, "v")
             hv_symmetry += eval_symmetry(weight, "hv")
@@ -143,8 +147,9 @@ def evaluate_symmetry(module):
     hv_symmetry = hv_symmetry / counter
     rot90_symmetry = rot90_symmetry / counter
     total_symmetry = total_symmetry / counter
+    mean_weight_total_symmetry / counter
 
-    return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry
+    return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry, mean_weight_total_symmetry
 
 
 ##############################################

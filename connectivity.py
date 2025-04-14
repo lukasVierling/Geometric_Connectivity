@@ -73,8 +73,8 @@ def test_connectivity(config_path):
         train_setup = {
             "model": "ResNet18",
             "num_classes": 10,
-            "n_epochs": 10,
-            "start_lr": 0.001,
+            "n_epochs": 20,
+            "start_lr": 0.1,
             "lr_decay": 0.1,
             "decay_epochs": 40,
             "data_config": data_config

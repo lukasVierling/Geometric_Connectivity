@@ -64,21 +64,21 @@ def get_data_loaders(dataset_config):
 
     if data_augmentation=="vanilla":
         print("no data augmentation applied")
-    if data_augmentation == "hflip":
+    elif data_augmentation == "hflip":
         transform_train.append(transforms.RandomHorizontalFlip())
         if augment_test:
             transform_test.append(transforms.RandomHorizontalFlip())
-    if data_augmentation == "vflip":
+    elif data_augmentation == "vflip":
         transform_train.append(transforms.RandomVerticalFlip())
         if augment_test:
             transform_test.append(transforms.RandomVerticalFlip())
-    if data_augmentation == "hvflip":
+    elif data_augmentation == "hvflip":
         transform_train.append(transforms.RandomHorizontalFlip())
         transform_train.append(transforms.RandomVerticalFlip())
         if augment_test:
             transform_test.append(transforms.RandomHorizontalFlip())
             transform_test.append(transforms.RandomVerticalFlip())
-    if data_augmentation == "rotate":
+    elif data_augmentation == "rotate":
         transform_train.append(Random90Rotation())
         if augment_test:
             transform_test.append(Random90Rotation())

@@ -1,20 +1,17 @@
-models:
-  model_1: "./logs/vanilla_5/final_model.pt"
-  model_2: "./logs/vflip_5/final_model.pt"
-  name: "ResNet18"
-
-interpolation:
-  method: "LMCP"
-  num_samples: 10
-  permutation_iter : 90
-
 data:
-  dataset: "CIFAR10"
-  data_root: "./data/"
-  batch_size: 256
-  data_augmentation: "vanilla"
   augment_test: false
-
+  batch_size: 256
+  data_augmentation: vanilla
+  data_root: ./data/
+  dataset: CIFAR10
+interpolation:
+  num_samples: 10
+  permutation_iter: 90
+  method: QMC
+models:
+  name: ResNet18
+  model_1: ./logs/vanilla/vanilla_1/final_model.pt
+  model_2: ./logs/vanilla/rot90_1/final_model.pt
 run:
-  save_dir: "./logs/connectivity"
-  run_id: "vanilla_5_to_vflip_5_lmcp"
+  run_id: vanill_1_to_rot90_1_qmc
+  save_dir: ./logs/vanilla_connectivity

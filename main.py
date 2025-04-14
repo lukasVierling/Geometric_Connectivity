@@ -79,6 +79,11 @@ def main(config_path):
     model = get_model(model_config)
     model = model.to(device)
 
+    #load pretrained model
+    if run_config["from_pretrained"]:
+        init_model = torch.load(run_config["pretrained_path"])
+        model.load_state_dict(init_model)
+    
     #save model if set
     if save_init:
         save_model_and_config(model, config, save_dir, name="init")
@@ -86,23 +91,26 @@ def main(config_path):
     #optimizer and loss
     optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=momentum, weight_decay=weight_decay)
     criterion = F.cross_entropy
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0.1)
-    #scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0)
+    scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
     all_symmetries = []
     print("Start Training...")
     for epoch in tqdm(range(epochs), desc=f"Training for {epochs} epochs..."):
-        train_epoch(model, optimizer, None, criterion, train_loader, device, epoch) #scheduler None because we have epoch-wise scheduler
-        evaluate(model, test_loader, device, epoch)
-        scheduler.step()
         if epoch % 1 == 0 and track_symmetry: #1 can be adjusted to track symmetry less often
             symmetries = model.evaluate_symmetry()
-            wandb.log({ "horizontal": symmetries[0],
+            wandb.log({ 
+                    "horizontal": symmetries[0],
                     "vertical":symmetries[1],
                     "horizontal-vertical": symmetries[2],
                     "rot90": symmetries[3],
-                    "total_symmetry": symmetries[4]
+                    "total_symmetry": symmetries[4],
+                    "mean_total_symmetry": symmetries[5],
             })
             all_symmetries.append(symmetries)
+        train_epoch(model, optimizer, None, criterion, train_loader, device, epoch) #scheduler None because we have epoch-wise scheduler
+        evaluate(model, test_loader, device, epoch)
+        scheduler.step()
+        
     
     print("Finished Training!")
 
