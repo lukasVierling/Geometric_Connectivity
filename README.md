@@ -1,4 +1,4 @@
-# GDL
+# A Loss Perspective on Symmetric CNN Kernels
 The development of Convolutional Neural Networks (CNNs) was the first machine
 learning approach that allowed machines to surpass human performance on Ima-
 geNet, laying the foundation for modern deep learning. However, little is known
