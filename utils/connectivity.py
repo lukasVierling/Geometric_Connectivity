@@ -5,8 +5,6 @@ import torch.optim as optim
 
 from tqdm import tqdm
 
-#my imports 
-from models.CNN import CNN
 
 
 def evaluate_loss(model, train_loader,test_loader, criterion, device):

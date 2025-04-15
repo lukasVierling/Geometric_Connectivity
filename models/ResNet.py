@@ -4,6 +4,7 @@ Authors: Ekdeep Singh Lubana et al.
 Date: 09.04.2026
 GitHub: https://github.com/EkdeepSLubana/MMC
 Paper: https://arxiv.org/pdf/2211.08422
+License: MIT License
 Modifcation: Support Symmetric Kernels for ResNet18
 '''
 import torch
@@ -12,10 +13,7 @@ import torch.nn.functional as F
 import copy
 import torch
 
-
-##############################################
-# Symmetry Operators and Symmetric Conv2d
-##############################################
+#We calculate the symmetric kernels according to the formula in the paper
 
 class WeightSymmetry(nn.Module):
     def forward(self, weight):
@@ -152,10 +150,6 @@ def evaluate_symmetry(module):
     return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry, mean_weight_total_symmetry
 
 
-##############################################
-# Modified ResNet Blocks with Symmetric Kernels
-##############################################
-
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -214,10 +208,6 @@ class Bottleneck(nn.Module):
             shortcut = self.shortcut_bn(self.shortcut_conv(x))
         out += shortcut
         return F.relu(out)
-
-##############################################
-# Modified ResNet Model with Symmetric Kernels
-##############################################
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, cfg=None, symmetry='vanilla'):
@@ -301,10 +291,6 @@ class ResNet_basic(nn.Module):
             out = self.linear(out)
         return out
 
-##############################################
-# Convenience Functions
-##############################################
-
 def get_block(block):
     if block == "BasicBlock":
         return BasicBlock
@@ -320,9 +306,6 @@ def ResNet34(num_classes=10, block="BasicBlock", symmetry='vanilla'):
 def ResNet56(num_classes=10, block="BasicBlock", symmetry='vanilla'):
     return ResNet_basic(get_block(block), [9, 9, 9], num_classes=num_classes, symmetry=symmetry)
 
-##############################################
-# Retrieval Function for Backbones
-##############################################
 
 def create_model(name, num_classes=10, block='BasicBlock', symmetry='vanilla', normal_conv_layer=True):
     if name == 'ResNet18':

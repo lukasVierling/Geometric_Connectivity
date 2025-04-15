@@ -4,6 +4,7 @@ Authors: Ekdeep Singh Lubana et al.
 Date: 09.04.2025
 GitHub: https://github.com/EkdeepSLubana/MMC
 Paper: https://arxiv.org/pdf/2211.08422
+License: MIT License
 Modifcation: Modified probe_connect to integrate in our codebase
 '''
 import torch
