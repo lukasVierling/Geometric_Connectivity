@@ -13,7 +13,6 @@ import random
 import numpy as np
 
 #my imports
-from models.CNN import CNN
 from models.ResNet import ResNet18
 
 def set_seed(seed):

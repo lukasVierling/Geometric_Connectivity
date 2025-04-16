@@ -35,7 +35,7 @@ pip install -r requirements_pip.txt
 To train a ResNet model run:
 
 ```experiment1
-python main.py --configs/vanilla_configs/vflip.yaml
+python main.py --config configs/vanilla_configs/vflip.yaml
 ```
 Choose a config depending on the kernel symmetry you want.
 ### Linear Mode Connectivity
@@ -43,11 +43,15 @@ Choose a config depending on the kernel symmetry you want.
 To calculate the loss along the linear interpolation between two models, run:
 
 ```experiment2
-python connectivity.py --configs/vanilla_connectivity/vanilla_1_to_rot90_1.lmcp.yaml
+python connectivity.py --config configs/vanilla_connectivity/vanilla_1_to_rot90_1_lmcp.yaml
 ```
 You can choose the correct config based on the models you want to interpolate between. 
 
 Consider modifying the data paths in the config or other hyperparameters based on your requirements.
+
+### Sharpness Evaluation
+
+Code to evaluate the sharpness of minima can be found in the `connectivity.ipynb` notebook.
 
 ## Results
 
