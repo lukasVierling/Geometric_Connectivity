@@ -36,8 +36,10 @@ class HVFlipSymmetry(WeightSymmetry):
 
 class Rot90Symmetry(WeightSymmetry):
     def forward(self, weight):
-        rot90 = lambda w, k: torch.rot90(w, k=k, dims=[2, 3])
-        return 0.25 * (weight + rot90(weight, 1) + rot90(weight, 2) + rot90(weight, 3))
+        return 0.25 * (weight + 
+                       torch.rot90(weight, k=1, dims=[2, 3]) + 
+                       torch.rot90(weight, k=2, dims=[2, 3]) + 
+                       torch.rot90(weight, k=3, dims=[2, 3]))
 
 SYMMETRY_CLASSES = {
     'vanilla': WeightSymmetry,
@@ -119,7 +121,7 @@ def eval_symmetry(weight, symmetry):
     return S_K.item()
 
 
-def evaluate_symmetry(module):
+def accumulate_symmetry(module):
     horizontal_symmetry = 0
     vertical_symmetry = 0
     hv_symmetry = 0
@@ -133,21 +135,31 @@ def evaluate_symmetry(module):
             weight = child.symmetry(conv_orig.weight).detach().clone()
             #get the mean kernel
             mean_weight = weight.mean(dim=(0,1), keepdim=True)
-            mean_weight_total_symmetry = eval_symmetry(mean_weight, "total")
+            mean_weight_total_symmetry += eval_symmetry(mean_weight, "total")
             horizontal_symmetry += eval_symmetry(weight, "h")
             vertical_symmetry += eval_symmetry(weight, "v")
             hv_symmetry += eval_symmetry(weight, "hv")
             rot90_symmetry += eval_symmetry(weight, "rot90")
             total_symmetry += eval_symmetry(weight, "total")
             counter += 1
-    horizontal_symmetry = horizontal_symmetry / counter
-    vertical_symmetry = vertical_symmetry / counter
-    hv_symmetry = hv_symmetry / counter
-    rot90_symmetry = rot90_symmetry / counter
-    total_symmetry = total_symmetry / counter
-    mean_weight_total_symmetry / counter
+        else:
+            h, v, hv, rot90, tot, mean_tot, cntr = accumulate_symmetry(child)
+            horizontal_symmetry += h
+            vertical_symmetry += v
+            hv_symmetry += hv
+            rot90_symmetry += rot90
+            total_symmetry += tot
+            mean_weight_total_symmetry += mean_tot
+            counter += cntr
 
-    return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry, mean_weight_total_symmetry
+    return horizontal_symmetry, vertical_symmetry, hv_symmetry, rot90_symmetry, total_symmetry, mean_weight_total_symmetry, counter
+
+def evaluate_symmetry(module):
+    h,v,hv,rot90, tot, mean_tot, counter = accumulate_symmetry(module)
+    
+    print(f"counted {counter} convolutions")
+
+    return h/counter, v/counter, hv/counter, rot90/counter, tot/counter, mean_tot/counter
 
 
 class BasicBlock(nn.Module):
@@ -214,7 +226,6 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.in_planes = 64
         
-        # Use symmetric convolution for the initial layer as well.
         self.conv1 = SymmetricConv2d(3, 64, kernel_size=3, stride=1, padding=1,
                                      bias=False, symmetry=symmetry)
         self.bn1 = nn.BatchNorm2d(64, affine=True)

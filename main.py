@@ -91,8 +91,8 @@ def main(config_path):
     #optimizer and loss
     optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=momentum, weight_decay=weight_decay)
     criterion = F.cross_entropy
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0)
-    scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 80], gamma=0.1)
+    #scheduler = LR_Scheduler(optimizer, epochs, base_lr, final_lr, len(train_loader))
     all_symmetries = []
     print("Start Training...")
     for epoch in tqdm(range(epochs), desc=f"Training for {epochs} epochs..."):
