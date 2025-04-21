@@ -29,17 +29,11 @@ class VerticalFlipSymmetry(WeightSymmetry):
 
 class HVFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.25 * (weight +
-                       torch.flip(weight, dims=[2]) +
-                       torch.flip(weight, dims=[3]) +
-                       torch.flip(weight, dims=[2, 3]))
+        return 0.25 * (weight + torch.flip(weight, dims=[2]) + torch.flip(weight, dims=[3]) + torch.flip(weight, dims=[2, 3]))
 
 class Rot90Symmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.25 * (weight + 
-                       torch.rot90(weight, k=1, dims=[2, 3]) + 
-                       torch.rot90(weight, k=2, dims=[2, 3]) + 
-                       torch.rot90(weight, k=3, dims=[2, 3]))
+        return 0.25 * (weight + torch.rot90(weight, k=1, dims=[2, 3]) + torch.rot90(weight, k=2, dims=[2, 3]) + torch.rot90(weight, k=3, dims=[2, 3]))
 
 SYMMETRY_CLASSES = {
     'vanilla': WeightSymmetry,
@@ -53,15 +47,12 @@ class SymmetricConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
                  bias=False, symmetry='vanilla', **kwargs):
         super(SymmetricConv2d, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size,
-                              stride=stride, padding=padding, bias=bias, **kwargs)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding, bias=bias, **kwargs)
         self.symmetry = SYMMETRY_CLASSES[symmetry]()
         
     def forward(self, x):
         weight = self.symmetry(self.conv.weight)
-        return F.conv2d(x, weight, self.conv.bias,
-                        stride=self.conv.stride, padding=self.conv.padding,
-                        dilation=self.conv.dilation, groups=self.conv.groups)
+        return F.conv2d(x, weight, self.conv.bias, stride=self.conv.stride, padding=self.conv.padding, dilation=self.conv.dilation, groups=self.conv.groups)
     
 def replace_sym_conv_with_normal(module):
     for name, child in list(module._modules.items()):
@@ -94,12 +85,9 @@ def eval_symmetry(weight, symmetry):
     elif symmetry == "v":
         transforms = [lambda x: torch.flip(x, [-2])]
     elif symmetry == "hv":
-        transforms = [lambda x: torch.flip(x, [-1]),
-               lambda x: torch.flip(x, [-2])]
+        transforms = [lambda x: torch.flip(x, [-1]), lambda x: torch.flip(x, [-2])]
     elif symmetry == "rot90":
-        transforms= [lambda x: torch.rot90(x, k=1, dims=(-2,-1)),
-                     lambda x: torch.rot90(x, k=2,dims=(-2,-1)),
-                     lambda x: torch.rot90(x, k=3,dims=(-2,-1))]
+        transforms= [lambda x: torch.rot90(x, k=1, dims=(-2,-1)), lambda x: torch.rot90(x, k=2,dims=(-2,-1)), lambda x: torch.rot90(x, k=3,dims=(-2,-1))]
     elif symmetry == "total":
         transforms = [
             lambda x: torch.rot90(x, k=1, dims=[2, 3]),
