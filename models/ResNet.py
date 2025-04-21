@@ -21,19 +21,19 @@ class WeightSymmetry(nn.Module):
 
 class HorizontalFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.5 * (weight + torch.flip(weight, dims=[3]))
+        return 0.5*(weight + torch.flip(weight, dims=[3]))
 
 class VerticalFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.5 * (weight + torch.flip(weight, dims=[2]))
+        return 0.5*(weight + torch.flip(weight, dims=[2]))
 
 class HVFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.25 * (weight + torch.flip(weight, dims=[2]) + torch.flip(weight, dims=[3]) + torch.flip(weight, dims=[2, 3]))
+        return 0.25*(weight + torch.flip(weight, dims=[2]) + torch.flip(weight, dims=[3]) + torch.flip(weight, dims=[2, 3]))
 
 class Rot90Symmetry(WeightSymmetry):
     def forward(self, weight):
-        return 0.25 * (weight + torch.rot90(weight, k=1, dims=[2, 3]) + torch.rot90(weight, k=2, dims=[2, 3]) + torch.rot90(weight, k=3, dims=[2, 3]))
+        return 0.25*(weight + torch.rot90(weight, k=1, dims=[2, 3]) + torch.rot90(weight, k=2, dims=[2, 3]) + torch.rot90(weight, k=3, dims=[2, 3]))
 
 SYMMETRY_CLASSES = {
     'vanilla': WeightSymmetry,
@@ -155,19 +155,16 @@ class BasicBlock(nn.Module):
 
     def __init__(self, in_planes, planes, stride=1, symmetry='vanilla'):
         super(BasicBlock, self).__init__()
-        self.use_shortcut = (stride != 1 or in_planes != self.expansion * planes)
-        
-        self.conv1 = SymmetricConv2d(in_planes, planes, kernel_size=3, stride=stride,
-                                     padding=1, bias=False, symmetry=symmetry)
+        self.use_shortcut = stride != 1 or in_planes != self.expansion*planes
+        self.conv1 = SymmetricConv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False, symmetry=symmetry)
         self.bn1 = nn.BatchNorm2d(planes, affine=True)
-        self.conv2 = SymmetricConv2d(planes, planes, kernel_size=3, stride=1,
-                                     padding=1, bias=False, symmetry=symmetry)
+        self.conv2 = SymmetricConv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False, symmetry=symmetry)
         self.bn2 = nn.BatchNorm2d(planes, affine=True)
         
+        self.shortcut_conv = nn.Sequential()
         if self.use_shortcut:
-            self.shortcut_conv = SymmetricConv2d(in_planes, self.expansion * planes,
-                                                  kernel_size=1, stride=stride, bias=False, symmetry=symmetry)
-            self.shortcut_bn = nn.BatchNorm2d(self.expansion * planes, affine=True)
+            self.shortcut_conv = SymmetricConv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False, symmetry=symmetry)
+            self.shortcut_bn = nn.BatchNorm2d(self.expansion*planes, affine=True)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -184,20 +181,18 @@ class Bottleneck(nn.Module):
 
     def __init__(self, in_planes, planes, stride=1, symmetry='vanilla'):
         super(Bottleneck, self).__init__()
-        self.use_shortcut = (stride != 1 or in_planes != self.expansion * planes)
-        
+        self.use_shortcut = stride != 1 or in_planes != self.expansion*planes
         self.conv1 = SymmetricConv2d(in_planes, planes, kernel_size=1, bias=False, symmetry=symmetry)
         self.bn1 = nn.BatchNorm2d(planes, affine=True)
-        self.conv2 = SymmetricConv2d(planes, planes, kernel_size=3, stride=stride, padding=1,
-                                     bias=False, symmetry=symmetry)
+        self.conv2 = SymmetricConv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False, symmetry=symmetry)
         self.bn2 = nn.BatchNorm2d(planes, affine=True)
-        self.conv3 = SymmetricConv2d(planes, self.expansion * planes, kernel_size=1, bias=False, symmetry=symmetry)
-        self.bn3 = nn.BatchNorm2d(self.expansion * planes, affine=True)
+        self.conv3 = SymmetricConv2d(planes, self.expansion*planes, kernel_size=1, bias=False, symmetry=symmetry)
+        self.bn3 = nn.BatchNorm2d(self.expansion*planes, affine=True)
         
+        self.shortcut_conv = nn.Sequential()
         if self.use_shortcut:
-            self.shortcut_conv = SymmetricConv2d(in_planes, self.expansion * planes,
-                                                  kernel_size=1, stride=stride, bias=False, symmetry=symmetry)
-            self.shortcut_bn = nn.BatchNorm2d(self.expansion * planes, affine=True)
+            self.shortcut_conv = SymmetricConv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False, symmetry=symmetry)
+            self.shortcut_bn = nn.BatchNorm2d(self.expansion*planes, affine=True)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -213,17 +208,14 @@ class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, cfg=None, symmetry='vanilla'):
         super(ResNet, self).__init__()
         self.in_planes = 64
-        
-        self.conv1 = SymmetricConv2d(3, 64, kernel_size=3, stride=1, padding=1,
-                                     bias=False, symmetry=symmetry)
+
+        self.conv1 = SymmetricConv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False, symmetry=symmetry)
         self.bn1 = nn.BatchNorm2d(64, affine=True)
-        
         self.layer1 = self._make_layer(block, 64,  num_blocks[0], stride=1, symmetry=symmetry)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2, symmetry=symmetry)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2, symmetry=symmetry)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2, symmetry=symmetry)
-        
-        self.output_dim = 512 * block.expansion
+        self.output_dim = 512*block.expansion
         self.linear = nn.Linear(self.output_dim, num_classes)
 
 
@@ -261,14 +253,14 @@ class ResNet(nn.Module):
 class ResNet_basic(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, cfg=None, symmetry='vanilla'):
         super(ResNet_basic, self).__init__()
+
         self.in_planes = 16
-        self.conv1 = SymmetricConv2d(3, 16, kernel_size=3, stride=1, padding=1,
-                                     bias=False, symmetry=symmetry)
+        self.conv1 = SymmetricConv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False, symmetry=symmetry)
         self.bn1 = nn.BatchNorm2d(16, affine=True)
         self.layer1 = self._make_layer(block, 16, num_blocks[0], stride=1, symmetry=symmetry)
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2, symmetry=symmetry)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2, symmetry=symmetry)
-        self.output_dim = 64 * block.expansion
+        self.output_dim = 64*block.expansion
         self.linear = nn.Linear(self.output_dim, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride, symmetry):
