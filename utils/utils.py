@@ -98,7 +98,7 @@ def get_data_loaders(dataset_config):
         print("Unknown data augmentation:", data_augmentation)
 
     if dataset_name == "CIFAR10":
-        # norm values from https://www.mindspore.cn/tutorials/application/en/r2.1/cv/resnet50.html
+        # norm values from https://www.digitalocean.com/community/tutorials/writing-resnet-from-scratch-in-pytorch
         transform_train += [
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465),
