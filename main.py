@@ -80,7 +80,8 @@ def main(config_path):
     model = model.to(device)
 
     #load pretrained model
-    if run_config["from_pretrained"]:
+    if run_config.get("from_pretrained", False):
+        print("Init from pretrained")
         init_model = torch.load(run_config["pretrained_path"])
         model.load_state_dict(init_model)
     
