@@ -15,26 +15,33 @@ import torch
 
 #We calculate the symmetric kernels according to the formula in the paper
 
+#For definitions of Symmetries please refer to Appendix A of the paper
 class WeightSymmetry(nn.Module):
+    # vanilla weight doesn't change anything
     def forward(self, weight):
         return weight
 
 class HorizontalFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
+        # use the formula for {id, H}
         return 0.5*(weight + torch.flip(weight, dims=[3]))
 
 class VerticalFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
+        #use the formula for {id, V}
         return 0.5*(weight + torch.flip(weight, dims=[2]))
 
 class HVFlipSymmetry(WeightSymmetry):
     def forward(self, weight):
+        #use the formula for {id, H, V, HV}
         return 0.25*(weight + torch.flip(weight, dims=[2]) + torch.flip(weight, dims=[3]) + torch.flip(weight, dims=[2, 3]))
 
 class Rot90Symmetry(WeightSymmetry):
     def forward(self, weight):
+        #use the formula for {id, R, R^2, R^3}
         return 0.25*(weight + torch.rot90(weight, k=1, dims=[2, 3]) + torch.rot90(weight, k=2, dims=[2, 3]) + torch.rot90(weight, k=3, dims=[2, 3]))
 
+#mapping from symmetry abbreviation to kernel implementation
 SYMMETRY_CLASSES = {
     'vanilla': WeightSymmetry,
     'hflip': HorizontalFlipSymmetry,
@@ -47,17 +54,23 @@ class SymmetricConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
                  bias=False, symmetry='vanilla', **kwargs):
         super(SymmetricConv2d, self).__init__()
+        #create a convolution
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding, bias=bias, **kwargs)
+        #create respective kernel symmetry
         self.symmetry = SYMMETRY_CLASSES[symmetry]()
         
     def forward(self, x):
+        #get the effective weights (K in paper)
         weight = self.symmetry(self.conv.weight)
+        # do the convolution with effective (symmetric) weights instead of vanilla weights
         return F.conv2d(x, weight, self.conv.bias, stride=self.conv.stride, padding=self.conv.padding, dilation=self.conv.dilation, groups=self.conv.groups)
     
 def replace_sym_conv_with_normal(module):
     for name, child in list(module._modules.items()):
         if isinstance(child, SymmetricConv2d):
+            #get the SymmetricConv2d layer
             conv_orig = child.conv
+            #create new convolution layer
             new_conv = nn.Conv2d(
                 conv_orig.in_channels,
                 conv_orig.out_channels,
@@ -68,7 +81,9 @@ def replace_sym_conv_with_normal(module):
                 groups=conv_orig.groups,
                 bias=(conv_orig.bias is not None)
             )
+            # get the symmetric Kernel K
             effective_weight = child.symmetry(conv_orig.weight).detach().clone()
+            # replace K' with K
             new_conv.weight.data.copy_(effective_weight)
             if conv_orig.bias is not None:
                 new_conv.bias.data.copy_(conv_orig.bias.data)
@@ -79,7 +94,7 @@ def replace_sym_conv_with_normal(module):
 def eval_symmetry(weight, symmetry):
 
     weight_normalized = weight / torch.norm(weight, p="fro")
-
+    #get all symmetry transformations according to formula
     if symmetry == "h":
         transforms = [lambda x: torch.flip(x, [-1])]
     elif symmetry == "v":
@@ -99,12 +114,17 @@ def eval_symmetry(weight, symmetry):
             lambda x: torch.flip(torch.rot90(x, k=1, dims=[2, 3]), [3])
         ]
     delta = 0
+    # sum_{T in D}
     for transform in transforms:
+        # T(K)
         weight_transformed = transform(weight_normalized)
+        # T(K) - K
         diff = weight_transformed - weight_normalized
+        # take fro norm
         delta += torch.norm(diff, p="fro")
-
+    # / 2*|D|
     avg_delta = delta/(2*len(transforms))
+    # 1- ...
     S_K = 1-avg_delta
     return S_K.item()
 
@@ -120,9 +140,11 @@ def accumulate_symmetry(module):
     for name, child in list(module._modules.items()):
         if isinstance(child, SymmetricConv2d):
             conv_orig = child.conv
+            #get the actual kernel (usually the same because we only use the function for vanilla CNNs)
             weight = child.symmetry(conv_orig.weight).detach().clone()
-            #get the mean kernel
+            #get the kxk mean kernel
             mean_weight = weight.mean(dim=(0,1), keepdim=True)
+            #get all symmetric metrics
             mean_weight_total_symmetry += eval_symmetry(mean_weight, "total")
             horizontal_symmetry += eval_symmetry(weight, "h")
             vertical_symmetry += eval_symmetry(weight, "v")
@@ -149,7 +171,7 @@ def evaluate_symmetry(module):
 
     return h/counter, v/counter, hv/counter, rot90/counter, tot/counter, mean_tot/counter
 
-
+### In the following code we exchanged the Conv2d layers with our new SymmetricConv2d layers to allow for ResNet architectures that support symmetric convolutions:
 class BasicBlock(nn.Module):
     expansion = 1
 
